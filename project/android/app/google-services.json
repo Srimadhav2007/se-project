@@ -1,21 +1,40 @@
 {
   "project_info": {
-    "project_number": "1058932627501",
-    "project_id": "strong-imagery-461714-n2",
-    "storage_bucket": "strong-imagery-461714-n2.firebasestorage.app"
+    "project_number": "473736664059",
+    "project_id": "project-b3fde",
+    "storage_bucket": "project-b3fde.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1058932627501:android:de17addb714b940943c0a4",
+        "mobilesdk_app_id": "1:473736664059:android:bcf7a2b9321c446013715e",
         "android_client_info": {
-          "package_name": "com.example.project"
+          "package_name": "com.example.flutter_application_1"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyASRnYzHqwTw_OVr8kA7BkdD2ZBj-uZOAc"
+          "current_key": "AIzaSyD3yErWe70o2qhVRttVSmB1NuENFANl3dk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:473736664059:android:c9143ec49af79d9a13715e",
+        "android_client_info": {
+          "package_name": "com.example.happiness_hub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3yErWe70o2qhVRttVSmB1NuENFANl3dk"
         }
       ],
       "services": {

@@ -1,4 +1,4 @@
-# project
+# happiness_hub
 
 A new Flutter project.
 

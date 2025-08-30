@@ -1,129 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:happiness_hub/screens/main_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-
-void main(){
-  
-  runApp(const myApp());
+// Make main asynchronous
+void main() async {
+  // Ensure Flutter widgets are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const HappinessHubApp());
 }
 
-class myApp extends StatelessWidget{
-  const myApp({super.key});
+// Main application widget
+class HappinessHubApp extends StatelessWidget {
+  const HappinessHubApp({super.key});
+
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Wellness Hub',
       debugShowCheckedModeBanner: false,
-      home: Helper(),
-    );
-  }
-}
-
-class Helper extends StatelessWidget {
-  const Helper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        actions: [
-          _buildActionButton(context, "Home"),
-          _buildActionButton(context, "Tools"),
-          _buildActionButton(context, "Help"),
-        ],
-      ),
-      body: const Center(
-        child: Text("Main Screen Text"),
-      ),
+      theme: _buildThemeData(),
+      home: const MainScreen(),
     );
   }
 
-  Widget _buildActionButton(BuildContext context, String text) {
-    return ElevatedButton(
-      onPressed: () {
-        // Navigate to a new screen when the button is pressed
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SecondScreen(title: text),
-          ),
-        );
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        textStyle: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'Roboto',
+  // Centralized theme for a consistent and appealing look, based on globals.css
+  ThemeData _buildThemeData() {
+    return ThemeData(
+      primaryColor: const Color(0xFF2E8B57), // Mapped from --primary (oklch(0.45 0.15 142)) -> SeaGreen
+      scaffoldBackgroundColor: const Color(0xFFFFFFFF), // Mapped from --background
+      colorScheme: ColorScheme.fromSwatch().copyWith(
+        primary: const Color(0xFF2E8B57), // Primary Green
+        secondary: const Color(0xFF3CB371),
+        surface: const Color(0xFFF0FFF0), // Mapped from --card -> Honeydew
+        onPrimary: Colors.white,
+        onSecondary: const Color(0xFF333333),
+        onSurface: const Color(0xFF333333),
+        error: const Color(0xFFD32F2F), // Mapped from --destructive
+      ),
+      textTheme: const TextTheme(
+        headlineSmall: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Color(0xFF333333)),
+        titleLarge: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
+        bodyMedium: TextStyle(fontSize: 16.0, color: Color(0xFF666666)),
+        labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        selectedItemColor: Color(0xFF2E8B57),
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Color(0xFFF0FFF0),
+        type: BottomNavigationBarType.fixed,
+        selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+        unselectedLabelStyle: TextStyle(fontSize: 12),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 1.0,
+        color: const Color(0xFFF0FFF0), // Light Green for cards
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
         ),
-        shape: const BeveledRectangleBorder(),
       ),
-      child: Text(text),
-    );
-  }
-}
-
-// This is the new screen that will "pop up"
-class SecondScreen extends StatelessWidget {
-  final String title;
-  
-  const SecondScreen({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: Color(0xFF3CB371),
+        foregroundColor: Colors.white,
       ),
-      body: 
-        checkAndReturn(title) 
-    );
-  }
-  Widget checkAndReturn(String title){
-    if(title=="Home") return homeReturn();
-    else if(title=="Tools") return toolsReturn();
-    else return helpReturn();
-  }
-  Widget homeReturn(){
-    return Center(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(onPressed: (){},child: Text("Admin Login"),),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(onPressed: (){},child: Text("Trainer Login"),),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(onPressed: (){},child: Text("User Login"),),
-          ),
-        ],
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
+        elevation: 0.0,
+        iconTheme: IconThemeData(color: Color(0xFF333333)),
+        titleTextStyle: TextStyle(
+          color: Color(0xFF333333),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
-    );
-  }
-  Widget toolsReturn(){
-    return Center(
-      child: Column(
-        children: [
-          ElevatedButton(onPressed: (){}, child: Text("Theme")),
-        ],
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       ),
-    );
-  }
-  Widget helpReturn(){
-    return Center(
-      child: Column(
-        children: [
-          ElevatedButton(onPressed: (){}, child: Text("FAQs")),
-        ],
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20.0),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.0),
+          borderSide: BorderSide.none,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2E8B57), // primary
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            )),
       ),
     );
   }
 }
 
-class myAppState extends ChangeNotifier{
-
-}
