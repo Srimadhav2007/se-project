@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:happiness_hub/screens/main_screen.dart';
+import 'package:happiness_hub/screens/auth_gate.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -24,23 +24,26 @@ class HappinessHubApp extends StatelessWidget {
       title: 'Wellness Hub',
       debugShowCheckedModeBanner: false,
       theme: _buildThemeData(),
-      home: const MainScreen(),
+      // The home property is now set to AuthGate to handle user sessions.
+      home: const AuthGate(),
     );
   }
 
-  // Centralized theme for a consistent and appealing look, based on globals.css
+  // Centralized theme for a consistent and appealing look
   ThemeData _buildThemeData() {
     return ThemeData(
-      primaryColor: const Color(0xFF2E8B57), // Mapped from --primary (oklch(0.45 0.15 142)) -> SeaGreen
-      scaffoldBackgroundColor: const Color(0xFFFFFFFF), // Mapped from --background
+      primaryColor: const Color(0xFF2E8B57),
+      scaffoldBackgroundColor: const Color(0xFFFFFFFF),
       colorScheme: ColorScheme.fromSwatch().copyWith(
-        primary: const Color(0xFF2E8B57), // Primary Green
+        primary: const Color(0xFF2E8B57),
         secondary: const Color(0xFF3CB371),
-        surface: const Color(0xFFF0FFF0), // Mapped from --card -> Honeydew
+        background: const Color(0xFFFFFFFF),
+        surface: const Color(0xFFF0FFF0),
         onPrimary: Colors.white,
         onSecondary: const Color(0xFF333333),
+        onBackground: const Color(0xFF333333),
         onSurface: const Color(0xFF333333),
-        error: const Color(0xFFD32F2F), // Mapped from --destructive
+        error: const Color(0xFFD32F2F),
       ),
       textTheme: const TextTheme(
         headlineSmall: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Color(0xFF333333)),
@@ -48,17 +51,9 @@ class HappinessHubApp extends StatelessWidget {
         bodyMedium: TextStyle(fontSize: 16.0, color: Color(0xFF666666)),
         labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.white),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        selectedItemColor: Color(0xFF2E8B57),
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Color(0xFFF0FFF0),
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-        unselectedLabelStyle: TextStyle(fontSize: 12),
-      ),
       cardTheme: CardThemeData(
         elevation: 1.0,
-        color: const Color(0xFFF0FFF0), // Light Green for cards
+        color: const Color(0xFFF0FFF0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
         ),
@@ -91,7 +86,7 @@ class HappinessHubApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2E8B57), // primary
+            backgroundColor: const Color(0xFF2E8B57),
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8.0),
