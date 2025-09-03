@@ -1,45 +1,76 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:happiness_hub/models/person.dart';
 import 'package:happiness_hub/models/task.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  // Get the current user
   final User? _currentUser = FirebaseAuth.instance.currentUser;
 
-  // Helper method to get the user's tasks collection reference.
-  // This is the core of the multi-user logic.
+  // --- Task Methods ---
+
+  // Helper to get the user-specific tasks collection reference
   CollectionReference<Map<String, dynamic>> _userTasksCollection() {
     final uid = _currentUser?.uid;
     if (uid == null) {
-      // This is a safeguard. The UI should prevent this from being called
-      // if the user is not logged in.
       throw Exception("User not logged in. Cannot access Firestore.");
     }
-    // This creates the correct path: users -> {userId} -> tasks
+    // Path: users -> {userId} -> tasks
     return _db.collection('users').doc(uid).collection('tasks');
   }
 
-  // Get a stream of tasks FOR THE CURRENT USER
+  // Get a stream of tasks for the current user
   Stream<List<Task>> getTasks() {
     return _userTasksCollection().snapshots().map((snapshot) =>
         snapshot.docs.map((doc) => Task.fromFirestore(doc)).toList());
   }
 
-  // Add a new task FOR THE CURRENT USER
+  // Add a new task for the current user
   Future<void> addTask(Task task) {
-    // We pass the task object, which gets converted to a Map by the toFirestore method.
     return _userTasksCollection().add(task.toFirestore());
   }
 
-  // Update a task's completion status FOR THE CURRENT USER
+  // Update a task's completion status for the current user
   Future<void> updateTaskCompletion(String taskId, bool isCompleted) {
     return _userTasksCollection().doc(taskId).update({'completed': isCompleted});
   }
 
-  // Delete a task FOR THE CURRENT USER
+  // Delete a task for the current user
   Future<void> deleteTask(String taskId) {
     return _userTasksCollection().doc(taskId).delete();
+  }
+
+  // --- Person Methods ---
+
+  // Helper to get the user-specific people collection reference
+  CollectionReference<Map<String, dynamic>> _userPeopleCollection() {
+    final uid = _currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in. Cannot access Firestore.");
+    }
+    // Path: users -> {userId} -> people
+    return _db.collection('users').doc(uid).collection('people');
+  }
+
+  // Get a stream of people for the current user
+  Stream<List<Person>> getPeople() {
+    return _userPeopleCollection().snapshots().map((snapshot) =>
+        snapshot.docs.map((doc) => Person.fromFirestore(doc)).toList());
+  }
+
+  // Add a new person for the current user
+  Future<void> addPerson(Person person) {
+    return _userPeopleCollection().add(person.toFirestore());
+  }
+
+  // Update an existing person for the current user
+  Future<void> updatePerson(Person person) {
+    return _userPeopleCollection().doc(person.id).update(person.toFirestore());
+  }
+
+  // Delete a person for the current user
+  Future<void> deletePerson(String personId) {
+    return _userPeopleCollection().doc(personId).delete();
   }
 }
 
