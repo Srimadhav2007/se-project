@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:happiness_hub/models/person.dart';
 import 'package:happiness_hub/models/task.dart';
+import 'package:happiness_hub/models/message.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -72,5 +73,75 @@ class FirestoreService {
   Future<void> deletePerson(String personId) {
     return _userPeopleCollection().doc(personId).delete();
   }
+
+  CollectionReference<Map<String, dynamic>> _userChatCollection() {
+    final uid = _currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in. Cannot access Firestore.");
+    }
+    return _db.collection('users').doc(uid).collection('chat');
+  }
+  
+  Stream<List<Message>> getMessages() {
+    return _userChatCollection().orderBy('timestamp', descending: false).snapshots().map(
+      (snapshot) => snapshot.docs.map((doc) => Message.fromFirestore(doc)).toList(),
+    );
+  }
+
+  Future<void> addMessage(Message message) {
+    return _userChatCollection().add(message.toFirestore());
+  }
+
+  Future<List<List<String>>> getPreviousChats() async {
+  final querySnapshot = await _userChatCollection()
+      .orderBy('timestamp', descending: false)
+      .get();
+
+  List<List<String>> chats = [];
+  DateTime? lastSessionTime;
+
+  for (final doc in querySnapshot.docs) {
+    final data = doc.data();
+    final sender = data['senderId']?.toString() ?? '';
+    final message = data['text']?.toString() ?? '';
+    final timestamp = (data['timestamp'] as Timestamp?)?.toDate();
+
+    // Assuming sessions are separated by a significant time gap (e.g., 30 minutes)
+    if (lastSessionTime == null ||
+        (timestamp != null &&
+            timestamp.difference(lastSessionTime).inMinutes > 30)) {
+      chats.add([]);
+    }
+    if (chats.isNotEmpty && timestamp != null) {
+      chats.last.add('$message|$sender|${timestamp.toIso8601String()}');
+      lastSessionTime = timestamp;
+    }
+  }
+
+  // Remove last session if it's too recent (optional logic)
+  if (chats.isNotEmpty && chats.last.isNotEmpty) {
+    final lastMsg = chats.last.last.split('|');
+    if (lastMsg.length == 3) {
+      final lastMsgTime = DateTime.tryParse(lastMsg[2]);
+      final now = DateTime.now();
+      if (lastMsgTime != null &&
+          now.difference(lastMsgTime).inMinutes < 30) {
+        chats.removeLast();
+      }
+    }
+  }
+
+  return chats;
+}
+  Future<void> clearMessages() async {
+    final batch = _db.batch();
+    final messages = await _userChatCollection().get();
+    for (final doc in messages.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
+
+  
 }
 

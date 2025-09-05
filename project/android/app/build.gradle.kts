@@ -16,6 +16,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+
+        isCoreLibraryDesugaringEnabled = true 
     }
 
     kotlinOptions {
@@ -41,6 +43,14 @@ android {
         }
     }
 }
+
+dependencies {
+    // This dependency is required to enable desugaring for Java 8 features.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.0") 
+    
+    // ... other dependencies like implementation(flutter.jar)
+}
+
 
 flutter {
     source = "../.."
