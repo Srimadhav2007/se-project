@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:happiness_hub/models/person.dart';
 import 'package:happiness_hub/models/task.dart';
 import 'package:happiness_hub/models/message.dart';
+import 'package:happiness_hub/models/user_profile.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -142,6 +143,25 @@ class FirestoreService {
     await batch.commit();
   }
 
-  
-}
+ DocumentReference<Map<String, dynamic>> _userDoc(String uid) {
+    return _db.collection('users').doc(uid);
+  }
 
+  // Create or update the user's profile document.
+  // This is often called right after a user signs up.
+  Future<void> setUserProfile(UserProfile userProfile) {
+    return _userDoc(userProfile.uid).set(userProfile.toFirestore());
+  }
+
+  // Get a stream of the user's profile data.
+  Stream<UserProfile> getUserProfile(String uid) {
+    return _userDoc(uid)
+        .snapshots()
+        .map((doc) => UserProfile.fromFirestore(doc));
+  }
+
+  // Update specific fields in the user's profile.
+  Future<void> updateUserProfile(String uid, Map<String, dynamic> data) {
+    return _userDoc(uid).update(data);
+  }
+}

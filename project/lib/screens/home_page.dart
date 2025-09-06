@@ -1,58 +1,207 @@
 import 'package:flutter/material.dart';
+import 'package:happiness_hub/models/task.dart';
+import 'package:happiness_hub/services/auth_service.dart';
+import 'package:happiness_hub/services/firestore_service.dart';
+import 'package:happiness_hub/screens/profile_page.dart';
+import 'dart:async';
+import 'package:intl/intl.dart'; 
 
-class HomePage extends StatelessWidget {
+import 'package:happiness_hub/services/notification_service.dart';
+
+class HomePage extends StatefulWidget {
   final Function(int) onNavigate;
   const HomePage({super.key, required this.onNavigate});
 
   @override
-  Widget build(BuildContext context) {
-    // Dummy data similar to the TSX file
-    const int tasksDone = 1;
-    const int totalTasks = 4;
-    const int reminders = 3;
+  State<HomePage> createState() => _HomePageState();
+}
 
-    return ListView(
-      children: [
-        const SizedBox(height: 16),
-        _buildHomeHeader(context),
-        const SizedBox(height: 24),
-        _buildStatsCards(context, tasksDone, totalTasks, reminders),
-        const SizedBox(height: 24),
-        _buildActiveReminders(context),
-        const SizedBox(height: 24),
-        _buildTodaysTasks(context),
-        const SizedBox(height: 24),
-        _buildQuickActions(context),
-        const SizedBox(height: 24),
-        _buildRecentConnections(context),
-        const SizedBox(height: 24),
-      ],
-    );
+class _HomePageState extends State<HomePage> {
+  final PageController _pageController = PageController();
+  Timer? _timer;
+  int _currentPage = 0;
+
+  final authService = AuthService();
+  final firestoreService = FirestoreService();
+  final NotificationService notificationService = NotificationService();
+
+  final List<String> _animatedDialogues = [
+    "Welcome to Wellness Hub",
+    "Where happiness is in your hands",
+    "Be a good person who cares about their people",
+    "Have good progress with our active reminders",
+    "Your daily dose of positivity awaits!"
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Timer for the animated text
+    _timer = Timer.periodic(const Duration(seconds: 4), (Timer timer) {
+      if (!mounted) return;
+      if (_currentPage < _animatedDialogues.length - 1) {
+        _currentPage++;
+      } else {
+        _currentPage = 0;
+      }
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          _currentPage,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeIn,
+        );
+      }
+    });
   }
-
-  Widget _buildHomeHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Good morning, Alex!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            Text("Let's make today amazing", style: TextStyle(color: Colors.grey)),
-          ],
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+  void _showInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('About Wellness Hub'),
+        content: const SingleChildScrollView(
+          child: Text(
+            'Wellness Hub is your personal companion on the journey to a happier, more balanced life. Our mission is to provide you with the tools to manage your tasks, nurture your relationships, and care for your well-being, all in one place.\n\n'
+            'We believe that small, consistent actions lead to profound changes. Let us help you organize your day, connect with loved ones, and find moments of mindfulness. Welcome to a better you.',
+          ),
         ),
-        Row(
-          children: [
-            IconButton(icon: const Icon(Icons.notifications_none_outlined), onPressed: () {}),
-            IconButton(icon: const Icon(Icons.help_outline), onPressed: () {}),
-            IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
-          ],
-        )
-      ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildStatsCards(BuildContext context, int tasksDone, int totalTasks, int reminders) {
+  @override
+  Widget build(BuildContext context) {
+    
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Wellness Hub"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: _showInfoDialog,
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'profile') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const ProfilePage()),
+                );
+              } else if (value == 'logout') {
+                authService.signOut();
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'profile',
+                child: ListTile(
+                  leading: Icon(Icons.person_outline),
+                  title: Text('My Profile'),
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'logout',
+                child: ListTile(
+                  leading: Icon(Icons.logout),
+                  title: Text('Log Out'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: StreamBuilder<List<Task>>(
+        stream: firestoreService.getTasks(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: Text('No events found.'));
+          }
+
+          final allTasks = snapshot.data ?? [];
+          final now = DateTime.now();
+          final startOfToday = DateTime(now.year, now.month, now.day);
+          final endOfToday = startOfToday.add(const Duration(days: 1));
+
+          final todayTasks = allTasks
+              .where((task) =>
+                  task.dateTime.isAfter(startOfToday) &&
+                  task.dateTime.isBefore(endOfToday))
+              .toList();
+          final completedToday =
+              todayTasks.where((task) => task.completed).length;
+
+          final upcomingReminders = allTasks
+              .where((task) => !task.completed && task.dateTime.isAfter(now))
+              .length;
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                
+                SizedBox(
+                  height: 50,
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: _animatedDialogues.length,
+                    itemBuilder: (context, index) {
+                      return Center(
+                        child: Text(
+                          _animatedDialogues[index],
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 18, fontStyle: FontStyle.italic, color: Colors.grey),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                //want to list all the upcoming reminders and tasks due today, just as listed with details in the schedule page
+                
+                _buildStatsCards(
+                  context,
+                  '$completedToday/${todayTasks.length}',
+                  upcomingReminders.toString(),
+                ),
+                const SizedBox(height: 1),
+                Text("Upcoming Reminders", style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                Container(
+                  width: 800,
+                  height: 200,
+                  child: Expanded(child: _buildUpcomingReminders(allTasks)),
+                ),
+                const SizedBox(height: 1),
+                _buildQuickActions(context),
+              ],
+            ),
+          );
+        }
+      )
+    );
+  }
+          
+
+  Widget _buildStatsCards(
+      BuildContext context, String tasksDone, String reminders) {
     return Row(
       children: [
         Expanded(
@@ -60,13 +209,17 @@ class HomePage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(children: [
-                Icon(Icons.check_circle_outline, color: Theme.of(context).primaryColor),
+                Icon(Icons.check_circle_outline,
+                    color: Theme.of(context).primaryColor),
                 const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Tasks Done", style: TextStyle(fontSize: 12)),
-                    Text("$tasksDone/$totalTasks", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text("Today's Progress",
+                        style: TextStyle(fontSize: 12)),
+                    Text(tasksDone,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                   ],
                 )
               ]),
@@ -79,13 +232,16 @@ class HomePage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(children: [
-                Icon(Icons.notifications_active_outlined, color: Theme.of(context).colorScheme.secondary),
+                Icon(Icons.notifications_active_outlined,
+                    color: Theme.of(context).colorScheme.secondary),
                 const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text("Reminders", style: TextStyle(fontSize: 12)),
-                    Text("$reminders", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(reminders,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                   ],
                 )
               ]),
@@ -96,171 +252,103 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildActiveReminders(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: Theme.of(context).primaryColor, width: 1.5),
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Active Reminders", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            _buildReminderTile(context, "Drink water", "Stay hydrated! Time for your water break.", Icons.local_drink_outlined, Colors.blue),
-            _buildReminderTile(context, "Take a break", "You've been working for 2 hours.", Icons.self_improvement, Colors.orange),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReminderTile(BuildContext context, String title, String subtitle, IconData icon, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-              ],
-            ),
-          ),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.close, size: 18)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTodaysTasks(BuildContext context) {
-     // Matching tasks from page.tsx
-    final List<Map<String, dynamic>> tasks = [
-      {'title': 'Morning meditation', 'time': '7:00 AM', 'completed': true, 'category': 'wellness'},
-      {'title': 'Team meeting', 'time': '10:00 AM', 'completed': false, 'category': 'work'},
-    ];
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Today's Tasks", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            ...tasks.map((task) => _buildTaskTile(context, task)),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildTaskTile(BuildContext context, Map<String, dynamic> task) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-           Icon(
-            task['completed'] ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: task['completed'] ? Theme.of(context).primaryColor : Colors.grey,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task['title'],
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    decoration: task['completed'] ? TextDecoration.lineThrough : TextDecoration.none,
-                  ),
-                ),
-                Text(task['time'], style: const TextStyle(fontSize: 12, color: Colors.grey)),
-              ],
-            ),
-          ),
-          Chip(
-            label: Text(task['category']),
-            backgroundColor: task['category'] == 'wellness' ? Theme.of(context).primaryColor.withOpacity(0.2) : Colors.grey.shade200,
-            labelStyle: TextStyle(fontSize: 10, color: task['category'] == 'wellness' ? Theme.of(context).primaryColor : Colors.black),
-            padding: const EdgeInsets.all(0),
-          )
-        ],
-      ),
-    );
-  }
-
   Widget _buildQuickActions(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Quick Actions", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _quickActionButton(context, "Add Task", Icons.add, () => onNavigate(1))),
-                const SizedBox(width: 16),
-                Expanded(child: _quickActionButton(context, "AI Assistant", Icons.chat, () => onNavigate(4))),
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _quickActionButton(BuildContext context, String label, IconData icon, VoidCallback onTap) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Theme.of(context).primaryColor),
+          Text("Quick Actions", style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          Text(label, style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => widget.onNavigate(1), // Navigate to Schedule page
+                  icon: const Icon(Icons.add_task),
+                  label: const Text("Add Task"),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => widget.onNavigate(4), // Navigate to AI page
+                  icon: const Icon(Icons.psychology_alt),
+                  label: const Text("Ask AI"),
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRecentConnections(BuildContext context) {
-    final List<Map<String, String>> people = [
-      {'name': 'Sarah Johnson', 'relationship': 'Best Friend', 'lastContact': '2 days ago'},
-      {'name': 'Mike Chen', 'relationship': 'Colleague', 'lastContact': '1 week ago'},
-    ];
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Recent Connections", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-             ...people.map((person) => ListTile(
-              leading: CircleAvatar(
-                // Placeholder avatar
-                backgroundColor: Theme.of(context).primaryColor,
-                child: Text(person['name']![0], style: const TextStyle(color: Colors.white)),
-              ),
-              title: Text(person['name']!),
-              subtitle: Text("${person['relationship']} • ${person['lastContact']}"),
-              contentPadding: EdgeInsets.zero,
-            )),
-          ],
+  Widget _buildUpcomingReminders(List<Task> allTasks) {
+    final upcomingTasks = allTasks.where((task) => task.dateTime.isAfter(DateTime.now())).toList();
+
+    if (upcomingTasks.isEmpty) {
+      return const Center(
+        child: Text(
+          "No upcoming-task reminders",
+          style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
-      ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      itemCount: upcomingTasks.length,
+      itemBuilder: (context, index) {
+        final task = upcomingTasks[index];
+        return Dismissible(
+          key: Key(task.id),
+          direction: DismissDirection.endToStart,
+          onDismissed: (_) {
+            firestoreService.deleteTask(task.id);
+            notificationService.cancelNotification(task.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("${task.title} deleted")),
+            );
+          },
+          background: Container(
+            color: Colors.red[400],
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            margin: const EdgeInsets.symmetric(vertical: 4.0),
+            child: const Icon(Icons.delete, color: Color.fromARGB(255, 40, 71, 56)),
+          ),
+          child: Card(
+            margin: const EdgeInsets.symmetric(vertical: 4.0),
+            child: ListTile(
+              leading: task.dateTime.isBefore(DateTime.now())?Checkbox(
+                value: task.completed,
+                onChanged: (bool? value) {
+                  firestoreService.updateTaskCompletion(task.id, value!);
+                },
+              ): Icon(
+                task.category == 'Work' ? Icons.work : Icons.home,
+                color: Theme.of(context).primaryColor,
+              ),
+              title: Text(
+                task.title,
+                style: TextStyle(
+                  decoration: task.completed ? TextDecoration.lineThrough : null,
+                ),
+              ),
+              subtitle: task.dateTime != null 
+                ? Text(DateFormat('MMM d, yyyy • h:mm a').format(task.dateTime!))
+                : Text('No date set'),
+              trailing: Chip(
+                label: Text(task.category),
+                backgroundColor: Colors.grey.shade200,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
+
 }
