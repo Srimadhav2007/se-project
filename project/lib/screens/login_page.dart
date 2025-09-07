@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:happiness_hub/services/auth_service.dart';
 
-// An enum to manage the form's state
 enum FormMode { login, signUp }
 
 class LoginPage extends StatefulWidget {
@@ -58,7 +57,7 @@ class _LoginPageState extends State<LoginPage> {
             _nameController.text.trim(), // Pass the name
           );
         }
-        // If successful, the AuthGate will handle navigation automatically.
+        
       } catch (e) {
         setState(() {
           _errorMessage = e.toString();

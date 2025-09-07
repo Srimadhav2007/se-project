@@ -53,7 +53,7 @@ class HealthReminder {
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
-    HealthReminder copyWith({
+  HealthReminder copyWith({
     String? id,
     String? title,
     String? description,

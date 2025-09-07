@@ -124,105 +124,105 @@ class _AIAssistantPageState extends State<AIAssistantPage> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Consumer<AIService>(
-    builder: (context, aiService, child) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text("AI Assistant"),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: 'Show Previous Chats',
-              onPressed: _fetchPreviousChats,
-            ),
-            if (_showPreviousChats)
+  Widget build(BuildContext context) {
+    return Consumer<AIService>(
+      builder: (context, aiService, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text("AI Assistant"),
+            actions: [
               IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: 'Hide Previous Chats',
-                onPressed: () {
-                  setState(() {
-                    _showPreviousChats = false;
-                  });
-                },
+                icon: const Icon(Icons.history),
+                tooltip: 'Show Previous Chats',
+                onPressed: _fetchPreviousChats,
               ),
-          ],
-        ),
-        body: Column(
-          children: [
-            if (_showPreviousChats) ...[
-              _buildPreviousChats(),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.chat),
-                  label: const Text('Continue Chat'),
+              if (_showPreviousChats)
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: 'Hide Previous Chats',
                   onPressed: () {
                     setState(() {
                       _showPreviousChats = false;
                     });
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
+                ),
+            ],
+          ),
+          body: Column(
+            children: [
+              if (_showPreviousChats) ...[
+                _buildPreviousChats(),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.chat),
+                    label: const Text('Continue Chat'),
+                    onPressed: () {
+                      setState(() {
+                        _showPreviousChats = false;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-            ] else ...[
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
+              ] else ...[
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(8.0),
+                    itemCount: aiService.messages.length,
+                    itemBuilder: (context, index) {
+                      final message = aiService.messages[index];
+                      final isUser = message['sender'] == 'user';
+                      return Align(
+                        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4.0),
+                          padding: const EdgeInsets.all(12.0),
+                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                          decoration: BoxDecoration(
+                            color: isUser ? Theme.of(context).primaryColor : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          child: Text(
+                            message['text']!,
+                            style: TextStyle(color: isUser ? Colors.white : Colors.black),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Padding(
                   padding: const EdgeInsets.all(8.0),
-                  itemCount: aiService.messages.length,
-                  itemBuilder: (context, index) {
-                    final message = aiService.messages[index];
-                    final isUser = message['sender'] == 'user';
-                    return Align(
-                      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                        padding: const EdgeInsets.all(12.0),
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                        decoration: BoxDecoration(
-                          color: isUser ? Theme.of(context).primaryColor : Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
-                        child: Text(
-                          message['text']!,
-                          style: TextStyle(color: isUser ? Colors.white : Colors.black),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          decoration: const InputDecoration(hintText: 'Ask for advice...'),
+                          onSubmitted: (value) => _sendMessage(aiService),
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _controller,
-                        decoration: const InputDecoration(hintText: 'Ask for advice...'),
-                        onSubmitted: (value) => _sendMessage(aiService),
+                      IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: () => _sendMessage(aiService),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.send),
-                      onPressed: () => _sendMessage(aiService),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
-        ),
-      );
-    },
-  );
-}
+          ),
+        );
+      },
+    );
+  }
 }

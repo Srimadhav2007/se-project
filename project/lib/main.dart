@@ -13,14 +13,12 @@ void main() async {
   runApp(const MyApp());
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Wrap the MaterialApp with a ChangeNotifierProvider.
-    // This makes the AIService available to all widgets below it in the tree.
+    
     return ChangeNotifierProvider(
       create: (context) => AIService(),
       child: MaterialApp(

@@ -13,7 +13,6 @@ class Message {
     required this.timestamp,
   });
 
-  // Factory constructor to create a Message from Firestore document
   factory Message.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data()!;
     return Message(
@@ -24,7 +23,6 @@ class Message {
     );
   }
 
-  // Convert Message to Firestore-compatible map
   Map<String, dynamic> toFirestore() {
     return {
       'text': text,

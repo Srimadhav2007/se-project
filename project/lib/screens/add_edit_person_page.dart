@@ -25,7 +25,7 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize controllers with existing person data or empty strings
+    
     _nameController = TextEditingController(text: widget.person?.name ?? '');
     _relationshipController = TextEditingController(text: widget.person?.relationship ?? '');
     _phoneController = TextEditingController(text: widget.person?.phone ?? '');
@@ -37,7 +37,7 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
   void _saveForm() {
     if (_formKey.currentState!.validate()) {
       final newPerson = Person(
-        id: widget.person?.id ?? '', // Use existing id or it will be generated
+        id: widget.person?.id ?? '', 
         name: _nameController.text,
         relationship: _relationshipController.text,
         phone: _phoneController.text,
@@ -47,10 +47,10 @@ class _AddEditPersonPageState extends State<AddEditPersonPage> {
       );
 
       if (widget.person == null) {
-        // Add new person
+        
         _firestoreService.addPerson(newPerson);
       } else {
-        // Update existing person
+        
         _firestoreService.updatePerson(newPerson);
       }
       Navigator.of(context).pop();

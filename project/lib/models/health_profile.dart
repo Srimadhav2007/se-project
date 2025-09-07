@@ -5,10 +5,10 @@ class HealthProfile {
   final String? name;
   final DateTime? dateOfBirth;
   final String? gender;
-  final double? weight; // in kg
+  final double? weight;
   final double? height;
-  final String? bloodGroup; // in cm
-  final String fitnessGoal; // 'bodybuilding', 'weight_loss', 'general_health', 'endurance'
+  final String? bloodGroup;
+  final String fitnessGoal;
   final List<String> healthConditions;
   final List<String> remedies;
   final DateTime lastUpdated;
@@ -30,14 +30,12 @@ class HealthProfile {
         remedies = remedies ?? <String>[],
         lastUpdated = lastUpdated ?? DateTime.now();
 
-  // Calculate BMI if weight/height are available
   double? get bmi {
     if (weight == null || height == null || height == 0) return null;
     final double meters = (height!) / 100.0;
     return weight! / (meters * meters);
   }
 
-  // Get BMI category (null if BMI unavailable)
   String? get bmiCategory {
     final value = bmi;
     if (value == null) return null;
@@ -47,7 +45,6 @@ class HealthProfile {
     return 'Obese';
   }
 
-  // Factory constructor to create a HealthProfile from a Firestore document
   factory HealthProfile.fromFirestore(DocumentSnapshot doc) {
     final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     return HealthProfile(
@@ -65,7 +62,6 @@ class HealthProfile {
     );
   }
 
-  // Method to convert a HealthProfile object to a Map for Firestore
   Map<String, dynamic> toFirestore() {
     return {
       'name': name,
@@ -80,7 +76,7 @@ class HealthProfile {
       'lastUpdated': Timestamp.fromDate(lastUpdated),
     };
   }
-   // Method to easily create a copy of the profile with updated fields
+
   HealthProfile copyWith({
     String? id,
     String? name,

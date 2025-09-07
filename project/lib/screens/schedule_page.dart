@@ -29,7 +29,7 @@ class _SchedulePageState extends State<SchedulePage> {
     _events = {};
   }
 
-  // Helper function to group tasks by day
+ 
   Map<DateTime, List<Task>> _groupTasksByDay(List<Task> tasks) {
     Map<DateTime, List<Task>> events = {};
     for (var task in tasks) {
@@ -43,13 +43,13 @@ class _SchedulePageState extends State<SchedulePage> {
     return events;
   }
 
-  // Get the list of tasks for a specific day
+ 
   List<Task> _getEventsForDay(DateTime day) {
     DateTime dateOnly = DateTime(day.year, day.month, day.day);
     return _events[dateOnly] ?? [];
   }
 
-  // Method to show a dialog for adding a new task with date and time pickers
+  
   void _showAddTaskDialog() async {
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController();
@@ -108,7 +108,6 @@ class _SchedulePageState extends State<SchedulePage> {
                           onPressed: () async {
                             final pickedTime = await showTimePicker(
                               context: context,
-                              // FIX: Provide a default value if selectedTime is null
                               initialTime: selectedTime ?? TimeOfDay.now(),
                             );
                             if (pickedTime != null) {
@@ -143,7 +142,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // FIX: Add null checks before proceeding
+                    
                     if (formKey.currentState!.validate() &&
                         selectedDate != null &&
                         selectedTime != null) {
@@ -156,14 +155,14 @@ class _SchedulePageState extends State<SchedulePage> {
                       );
 
                       final newTask = Task(
-                        id: '', // Firestore generates the ID
+                        id: '', 
                         title: titleController.text,
                         dateTime: finalDateTime,
                         category: category,
                         completed: false,
                       );
                       _firestoreService.addTask(newTask).then((_) {
-                        // After adding to DB, schedule the notification
+                        
                         _notificationService.scheduleNotification(newTask);
                       });
                       Navigator.of(context).pop();

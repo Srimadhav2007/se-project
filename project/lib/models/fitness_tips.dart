@@ -2,11 +2,11 @@ class FitnessTip {
   final String id;
   final String title;
   final String description;
-  final String category; // 'bodybuilding', 'weight_loss', 'general_health', 'endurance'
+  final String category;
   final List<String> foods;
   final List<String> exercises;
   final List<String> lifestyleTips;
-  final String difficulty; // 'beginner', 'intermediate', 'advanced'
+  final String difficulty;
 
   FitnessTip({
     required this.id,

@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -7,6 +10,12 @@ plugins {
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+val keyProperties = Properties()
+val keyPropertiesFile = rootProject.file("key.properties")
+
+    keyProperties.load(FileInputStream(keyPropertiesFile))
+
 
 android {
     namespace = "com.example.happiness_hub"
@@ -18,6 +27,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
 
         isCoreLibraryDesugaringEnabled = true 
+    }
+
+    signingConfigs {
+        create("release") {
+            // Use .getProperty() which returns null if key is not found
+            // This prevents the "null cannot be cast" error.
+            keyAlias = keyProperties.getProperty("keyAlias")
+            keyPassword = keyProperties.getProperty("keyPassword")
+            storeFile = file(keyProperties.getProperty("storeFile"))
+            storePassword = keyProperties.getProperty("storePassword")
+        }
     }
 
     kotlinOptions {
@@ -39,7 +59,7 @@ android {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

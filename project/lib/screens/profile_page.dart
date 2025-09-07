@@ -39,13 +39,13 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  // Populates controllers and updates the UI state
+  
   void _setInitialValues(UserProfile profile) {
     _originalProfile = profile;
     _nameController.text = profile.name;
     _phoneController.text = profile.phoneNumber;
     _professionController.text = profile.profession;
-    // This setState call is crucial to update the UI with the new data
+    
     setState(() {
       _dateOfBirth = profile.dateOfBirth;
     });
@@ -111,11 +111,10 @@ class _ProfilePageState extends State<ProfilePage> {
             return const Center(child: Text('Could not load profile.'));
           }
           
-          // When new data arrives from the stream, update the controllers.
+         
           if (snapshot.hasData) {
             final userProfile = snapshot.data!;
-            // FIX: Check if the data is new before scheduling an update.
-            // This prevents an infinite loop of updates.
+            
             if (_originalProfile == null || _originalProfile!.uid != userProfile.uid) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (mounted) {
@@ -126,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage> {
           }
           
           if (_originalProfile == null) {
-             // Show a loader until the first set of data is processed.
+             
              return const Center(child: CircularProgressIndicator());
           }
 

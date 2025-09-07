@@ -24,8 +24,7 @@ class _HealthPageState extends State<HealthPage> with TickerProviderStateMixin {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
-      // Calling setState here rebuilds the widget when the tab changes.
-      // This ensures the floatingActionButton's visibility is re-evaluated.
+      
       setState(() {});
     });
   }

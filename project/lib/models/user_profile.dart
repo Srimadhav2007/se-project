@@ -6,7 +6,7 @@ class UserProfile {
   final String email;
   final String phoneNumber;
   final DateTime? dateOfBirth;
-  final String profession; // New field
+  final String profession;
 
   UserProfile({
     required this.uid,
@@ -14,7 +14,7 @@ class UserProfile {
     required this.email,
     this.phoneNumber = '',
     this.dateOfBirth,
-    this.profession = '', // New field with default value
+    this.profession = '',
   });
 
   factory UserProfile.fromFirestore(DocumentSnapshot doc) {
@@ -27,7 +27,6 @@ class UserProfile {
       dateOfBirth: data['dateOfBirth'] != null
           ? (data['dateOfBirth'] as Timestamp).toDate()
           : null,
-      // Read the new field from Firestore
       profession: data['profession'] ?? '',
     );
   }
@@ -39,7 +38,6 @@ class UserProfile {
       'phoneNumber': phoneNumber,
       'dateOfBirth':
           dateOfBirth != null ? Timestamp.fromDate(dateOfBirth!) : null,
-      // Add the new field to Firestore
       'profession': profession,
     };
   }

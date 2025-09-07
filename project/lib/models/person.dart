@@ -7,7 +7,7 @@ class Person {
   final String phone;
   final String email;
   final String notes;
-  final int connectionStrength; // 1 to 5 star rating
+  final int connectionStrength;
   final List<String> tags;
 
   Person({
@@ -21,7 +21,6 @@ class Person {
     this.tags = const [],
   });
 
-  // Factory constructor to create a Person from a Firestore document
   factory Person.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data()!;
     return Person(
@@ -32,12 +31,10 @@ class Person {
       email: data['email'] ?? '',
       notes: data['notes'] ?? '',
       connectionStrength: data['connectionStrength'] ?? 3,
-      // Handle tags which are stored as a list in Firestore
       tags: List<String>.from(data['tags'] ?? []),
     );
   }
 
-  // Method to convert a Person object to a Map for Firestore
   Map<String, dynamic> toFirestore() {
     return {
       'name': name,

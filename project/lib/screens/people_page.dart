@@ -9,7 +9,7 @@ class PeoplePage extends StatelessWidget {
   final VoidCallback navigateToAIPage;
   const PeoplePage({super.key, required this.navigateToAIPage});
 
-  // This method shows the dialog to ask the user for their specific question.
+  
   void _showAIPromptDialog(BuildContext context, Person person) {
     final aiService = Provider.of<AIService>(context, listen: false);
     final queryController = TextEditingController();
@@ -35,7 +35,7 @@ class PeoplePage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 if (queryController.text.isNotEmpty) {
-                  // Construct the detailed prompt for the AI
+                  
                   final prompt = """
                   I need relationship advice about a person in my life.
                   Here are the details:
@@ -54,7 +54,7 @@ class PeoplePage extends StatelessWidget {
                   aiService.sendMessage(prompt);
                   AIService.isRelationQuery = false;
 
-                  // Close the dialog and switch to the AI page
+                  
                   Navigator.of(context).pop();
                   navigateToAIPage();
                 }
@@ -146,7 +146,7 @@ class PeoplePage extends StatelessWidget {
     );
   }
 
-  // Updated Person Card with the "Ask AI" button
+  
   Widget _buildPersonCard(BuildContext context, Person person, FirestoreService service) {
     return Card(
       elevation: 2.0,

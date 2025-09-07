@@ -15,10 +15,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  // This function will be passed to the PeoplePage to allow it to change the tab.
+  
   void _navigateToAIPage() {
     setState(() {
-      _selectedIndex = 4; // Index of the AI page
+      _selectedIndex = 4; 
     });
   }
 
@@ -27,7 +27,7 @@ class _MainScreenState extends State<MainScreen> {
     final List<Widget> widgetOptions = <Widget>[
       HomePage(onNavigate: (index) => setState(() => _selectedIndex = index)),
       const SchedulePage(),
-      PeoplePage(navigateToAIPage: _navigateToAIPage), // Pass the callback here
+      PeoplePage(navigateToAIPage: _navigateToAIPage), 
       const HealthPage(),
       const AIAssistantPage(),
     ];
