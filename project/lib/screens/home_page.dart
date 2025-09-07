@@ -5,7 +5,6 @@ import 'package:happiness_hub/services/firestore_service.dart';
 import 'package:happiness_hub/screens/profile_page.dart';
 import 'dart:async';
 import 'package:intl/intl.dart'; 
-
 import 'package:happiness_hub/services/notification_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -36,14 +35,11 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Timer for the animated text
     _timer = Timer.periodic(const Duration(seconds: 4), (Timer timer) {
       if (!mounted) return;
-      if (_currentPage < _animatedDialogues.length - 1) {
-        _currentPage++;
-      } else {
-        _currentPage = 0;
-      }
+      setState(() {
+        _currentPage = (_currentPage + 1) % _animatedDialogues.length;
+      });
       if (_pageController.hasClients) {
         _pageController.animateToPage(
           _currentPage,
@@ -53,12 +49,14 @@ class _HomePageState extends State<HomePage> {
       }
     });
   }
+
   @override
   void dispose() {
     _timer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
+
   void _showInfoDialog() {
     showDialog(
       context: context,
@@ -82,7 +80,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
@@ -154,10 +153,11 @@ class _HomePageState extends State<HomePage> {
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                
+                // Animated text
                 SizedBox(
-                  height: 50,
+                  height: screenHeight * 0.06,
                   child: PageView.builder(
                     controller: _pageController,
                     itemCount: _animatedDialogues.length,
@@ -167,38 +167,35 @@ class _HomePageState extends State<HomePage> {
                           _animatedDialogues[index],
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                              fontSize: 18, fontStyle: FontStyle.italic, color: Colors.grey),
+                            fontSize: 18,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey,
+                          ),
                         ),
                       );
                     },
                   ),
                 ),
-                const SizedBox(height: 16),
-                //want to list all the upcoming reminders and tasks due today, just as listed with details in the schedule page
-                
+                const SizedBox(height: 12),
                 _buildStatsCards(
                   context,
                   '$completedToday/${todayTasks.length}',
                   upcomingReminders.toString(),
                 ),
-                const SizedBox(height: 1),
-                Text("Upcoming Reminders", style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 20),
+                Text("Upcoming Reminders",
+                    style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
-                Container(
-                  width: 800,
-                  height: 200,
-                  child: Expanded(child: _buildUpcomingReminders(allTasks)),
-                ),
-                const SizedBox(height: 1),
+                Expanded(child: _buildUpcomingReminders(allTasks)),
+                const SizedBox(height: 16),
                 _buildQuickActions(context),
               ],
             ),
           );
-        }
-      )
+        },
+      ),
     );
   }
-          
 
   Widget _buildStatsCards(
       BuildContext context, String tasksDone, String reminders) {
@@ -206,6 +203,9 @@ class _HomePageState extends State<HomePage> {
       children: [
         Expanded(
           child: Card(
+            elevation: 2,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(children: [
@@ -226,9 +226,12 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 12),
         Expanded(
           child: Card(
+            elevation: 2,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(children: [
@@ -253,41 +256,47 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildQuickActions(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Quick Actions", style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => widget.onNavigate(1), // Navigate to Schedule page
-                  icon: const Icon(Icons.add_task),
-                  label: const Text("Add Task"),
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Quick Actions", style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => widget.onNavigate(1),
+                icon: const Icon(Icons.add_task),
+                label: const Text("Add Task"),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => widget.onNavigate(4), // Navigate to AI page
-                  icon: const Icon(Icons.psychology_alt),
-                  label: const Text("Ask AI"),
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => widget.onNavigate(4),
+                icon: const Icon(Icons.psychology_alt),
+                label: const Text("Ask AI"),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildUpcomingReminders(List<Task> allTasks) {
-    final upcomingTasks = allTasks.where((task) => task.dateTime.isAfter(DateTime.now())).toList();
+    final upcomingTasks =
+        allTasks.where((task) => task.dateTime.isAfter(DateTime.now())).toList();
 
     if (upcomingTasks.isEmpty) {
       return const Center(
@@ -298,7 +307,6 @@ class _HomePageState extends State<HomePage> {
       );
     }
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
       itemCount: upcomingTasks.length,
       itemBuilder: (context, index) {
         final task = upcomingTasks[index];
@@ -317,29 +325,37 @@ class _HomePageState extends State<HomePage> {
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             margin: const EdgeInsets.symmetric(vertical: 4.0),
-            child: const Icon(Icons.delete, color: Color.fromARGB(255, 40, 71, 56)),
+            child: const Icon(Icons.delete, color: Colors.white),
           ),
           child: Card(
-            margin: const EdgeInsets.symmetric(vertical: 4.0),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.symmetric(vertical: 6.0),
             child: ListTile(
-              leading: task.dateTime.isBefore(DateTime.now())?Checkbox(
-                value: task.completed,
-                onChanged: (bool? value) {
-                  firestoreService.updateTaskCompletion(task.id, value!);
-                },
-              ): Icon(
-                task.category == 'Work' ? Icons.work : Icons.home,
-                color: Theme.of(context).primaryColor,
-              ),
+              leading: task.dateTime.isBefore(DateTime.now())
+                  ? Checkbox(
+                      value: task.completed,
+                      onChanged: (bool? value) {
+                        firestoreService.updateTaskCompletion(task.id, value!);
+                      },
+                    )
+                  : Icon(
+                      task.category == 'Work' ? Icons.work : Icons.home,
+                      color: Theme.of(context).primaryColor,
+                    ),
               title: Text(
                 task.title,
                 style: TextStyle(
-                  decoration: task.completed ? TextDecoration.lineThrough : null,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  decoration:
+                      task.completed ? TextDecoration.lineThrough : null,
                 ),
               ),
-              subtitle: task.dateTime != null 
-                ? Text(DateFormat('MMM d, yyyy • h:mm a').format(task.dateTime!))
-                : Text('No date set'),
+              subtitle: Text(
+                DateFormat('MMM d, yyyy • h:mm a').format(task.dateTime),
+                style: const TextStyle(fontSize: 13, color: Colors.black54),
+              ),
               trailing: Chip(
                 label: Text(task.category),
                 backgroundColor: Colors.grey.shade200,
@@ -350,5 +366,4 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
 }
